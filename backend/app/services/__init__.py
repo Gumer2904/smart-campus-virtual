@@ -1,0 +1,6 @@
+"""
+Servicios del sistema.
+"""
+from app.services import usuario_service, estudiante_service, docente_service
+
+__all__ = ["usuario_service", "estudiante_service", "docente_service"]

@@ -19,9 +19,18 @@ from app.schemas.docente import (
     DocenteUpdate,
     DocenteResponse,
 )
+from app.schemas.asignatura import (
+    AsignaturaBase,
+    AsignaturaCreate,
+    AsignaturaUpdate,
+    AsignaturaResponse,
+    AsignaturaFiltros,
+)
 
 __all__ = [
     "UsuarioBase", "UsuarioCreate", "UsuarioUpdate", "UsuarioResponse",
     "EstudianteBase", "EstudianteCreate", "EstudianteUpdate", "EstudianteResponse",
     "DocenteBase", "DocenteCreate", "DocenteUpdate", "DocenteResponse",
+    "AsignaturaBase", "AsignaturaCreate", "AsignaturaUpdate",
+    "AsignaturaResponse", "AsignaturaFiltros",
 ]

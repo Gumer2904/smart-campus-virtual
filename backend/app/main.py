@@ -7,9 +7,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.asignaturas import router as asignaturas_router
 from app.api.v1.auth import router as auth_router
-from app.api.v1.estudiantes import router as estudiantes_router
 from app.api.v1.docentes import router as docentes_router
+from app.api.v1.estudiantes import router as estudiantes_router
 from app.core.config import settings
 
 
@@ -78,3 +79,4 @@ def health_check():
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Autenticación"])
 app.include_router(estudiantes_router, prefix="/api/v1/estudiantes", tags=["Estudiantes"])
 app.include_router(docentes_router, prefix="/api/v1/docentes", tags=["Docentes"])
+app.include_router(asignaturas_router, prefix="/api/v1/asignaturas", tags=["Asignaturas"])

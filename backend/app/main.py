@@ -8,8 +8,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.db.session import engine
-from app.db.base import Base
 
 
 # ==========================================
@@ -17,19 +15,11 @@ from app.db.base import Base
 # ==========================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Se ejecuta al arrancar y apagar la app.
-    Al arrancar: crea las tablas (temporal, luego usaremos Alembic).
-    """
     print("🚀 Iniciando Smart Campus Virtual API...")
-    # Importar modelos para que SQLAlchemy los registre
-    from app import models  # noqa: F401
-    # Crear tablas (en desarrollo; en producción usar Alembic)
-    Base.metadata.create_all(bind=engine)
+    from app import models  # noqa: F401  ← ESTO es lo que carga los modelos
     print("✅ Base de datos lista")
     yield
     print("🛑 Apagando Smart Campus Virtual API...")
-
 
 # ==========================================
 # Crear la aplicación FastAPI

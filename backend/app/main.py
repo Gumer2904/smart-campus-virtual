@@ -12,6 +12,7 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.docentes import router as docentes_router
 from app.api.v1.estudiantes import router as estudiantes_router
 from app.api.v1.matriculas import router as matriculas_router
+from app.api.v1.dashboard import router as dashboard_router
 from app.core.config import settings
 
 
@@ -82,3 +83,4 @@ app.include_router(estudiantes_router, prefix="/api/v1/estudiantes", tags=["Estu
 app.include_router(docentes_router, prefix="/api/v1/docentes", tags=["Docentes"])
 app.include_router(asignaturas_router, prefix="/api/v1/asignaturas", tags=["Asignaturas"])
 app.include_router(matriculas_router, prefix="/api/v1/matriculas", tags=["Matrículas"])
+app.include_router(dashboard_router, prefix="/api/v1/dashboard", tags=["Dashboard"])

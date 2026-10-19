@@ -6,6 +6,7 @@ from app.services import (
     estudiante_service,
     docente_service,
     asignatura_service,
+    matricula_service,
 )
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     "estudiante_service",
     "docente_service",
     "asignatura_service",
+    "matricula_service",
 ]

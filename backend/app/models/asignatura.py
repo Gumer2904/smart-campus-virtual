@@ -4,7 +4,7 @@ Modelo Asignatura.
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.db.base import Base
@@ -46,6 +46,12 @@ class Asignatura(Base):
         onupdate=func.now(),
         nullable=False,
     )
+
+    # ===== Relación con Matrículas =====
+    matriculas: Mapped[list["Matricula"]] = relationship(
+        "Matricula", back_populates="asignatura"
+    )
+
 
     def __repr__(self) -> str:
         return f"<Asignatura(id={self.id}, codigo='{self.codigo}', nombre='{self.nombre}')>"

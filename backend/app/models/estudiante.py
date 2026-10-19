@@ -33,6 +33,11 @@ class Estudiante(Base):
 
     # ===== Relación con Usuario =====
     usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="estudiante")
+    
+     # ===== NUEVA: Relación con Matrículas =====
+    matriculas: Mapped[list["Matricula"]] = relationship(
+        "Matricula", back_populates="estudiante", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Estudiante(id={self.id}, expediente='{self.expediente}')>"

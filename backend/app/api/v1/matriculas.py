@@ -179,3 +179,46 @@ def delete_matricula(
             detail="Matrícula no encontrada",
         )
     matricula_service.delete_matricula(db, matricula)
+    
+@router.post(
+    "/inteligente",
+    summary="Realizar una matrícula inteligente (con validaciones)",
+)
+    
+def crear_matricula_inteligente(
+    data: MatriculaCreate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """
+    Realiza una matrícula validando automáticamente:
+    - Prerrequisitos aprobados
+    - Límite de créditos por período
+    - Duplicados
+    """
+    _check_admin(current_user)
+
+    # Validar estudiante
+    estudiante = estudiante_service.get_estudiante_by_id(db, data.estudiante_id)
+    if not estudiante:
+        raise HTTPException(status_code=404, detail="Estudiante no encontrado")
+
+    # Ejecutar validaciones inteligentes
+    resultado = matricula_service.validar_matricula_inteligente(
+        db, data.estudiante_id, data.asignatura_id, data.periodo
+    )
+
+    if not resultado["puede_matricularse"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "mensaje": "Matrícula rechazada",
+                "errores": resultado["errores"],
+                "creditos_actuales": resultado["creditos_actuales"],
+                "creditos_nuevos": resultado["creditos_nuevos"],
+                "max_creditos": resultado["max_creditos"],
+            },
+        )
+
+    # Si todo está bien, crear la matrícula
+    return matricula_service.create_matricula(db, data)

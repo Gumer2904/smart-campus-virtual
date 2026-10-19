@@ -1,6 +1,7 @@
 """
 Servicios (lógica de negocio) para Matricula.
 """
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
@@ -17,7 +18,9 @@ def get_matricula_by_id(db: Session, matricula_id: int) -> Matricula | None:
     stmt = (
         select(Matricula)
         .options(
-            joinedload(Matricula.estudiante).joinedload(Matricula.estudiante.property.mapper.class_.usuario),
+            joinedload(Matricula.estudiante).joinedload(
+                Matricula.estudiante.property.mapper.class_.usuario
+            ),
             joinedload(Matricula.asignatura),
         )
         .where(Matricula.id == matricula_id)
@@ -113,3 +116,84 @@ def delete_matricula(db: Session, matricula: Matricula) -> None:
     """Elimina una matrícula."""
     db.delete(matricula)
     db.commit()
+
+
+def validar_matricula_inteligente(
+    db: Session, estudiante_id: int, asignatura_id: int, periodo: str
+) -> dict:
+    """
+    Valida si un estudiante puede matricularse en una asignatura.
+    Devuelve un dict con: puede_matricularse (bool), errores (list).
+    """
+    errores = []
+
+    # 1. Verificar duplicado
+    existente = get_matricula_existente(db, estudiante_id, asignatura_id, periodo)
+    if existente:
+        errores.append(
+            "El estudiante ya está matriculado en esta asignatura para este período"
+        )
+
+    # 2. Verificar prerrequisitos
+    asignatura = db.get(Asignatura, asignatura_id)
+    if not asignatura:
+        errores.append("Asignatura no encontrada")
+        return {"puede_matricularse": False, "errores": errores}
+
+    if asignatura.prerrequisitos:
+        # Los prerrequisitos vienen como "PROG101,MATE101"
+        codigos_prereq = [
+            c.strip() for c in asignatura.prerrequisitos.split(",") if c.strip()
+        ]
+        for codigo in codigos_prereq:
+            # Buscar la asignatura prerrequisito
+            prereq_asig = db.execute(
+                select(Asignatura).where(Asignatura.codigo == codigo)
+            ).scalar_one_or_none()
+            if not prereq_asig:
+                continue  # Si no existe el código, lo ignoramos por ahora
+
+            # Verificar si el estudiante la ha aprobado
+            matricula_prereq = db.execute(
+                select(Matricula).where(
+                    Matricula.estudiante_id == estudiante_id,
+                    Matricula.asignatura_id == prereq_asig.id,
+                    Matricula.aprobada == True,
+                )
+            ).scalar_one_or_none()
+
+            if not matricula_prereq:
+                errores.append(
+                    f"Falta aprobar el prerrequisito: {codigo} - {prereq_asig.nombre}"
+                )
+
+    # 3. Verificar límite de créditos
+    # Por defecto, un estudiante no puede matricularse de más de 30 créditos en un período
+    MAX_CREDITOS = 30
+    matriculas_periodo = (
+        db.execute(
+            select(Matricula)
+            .options(joinedload(Matricula.asignatura))
+            .where(
+                Matricula.estudiante_id == estudiante_id,
+                Matricula.periodo == periodo,
+                Matricula.estado != EstadoMatricula.ANULADA,
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    creditos_actuales = sum(m.asignatura.creditos for m in matriculas_periodo)
+    if creditos_actuales + asignatura.creditos > MAX_CREDITOS:
+        errores.append(
+            f"Límite de créditos excedido: {creditos_actuales + asignatura.creditos}/{MAX_CREDITOS}"
+        )
+
+    return {
+        "puede_matricularse": len(errores) == 0,
+        "errores": errores,
+        "creditos_actuales": creditos_actuales,
+        "creditos_nuevos": asignatura.creditos,
+        "max_creditos": MAX_CREDITOS,
+    }
